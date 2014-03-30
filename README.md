@@ -7,6 +7,7 @@
 1. [Arrays](#arrays)
 1. [Strings](#strings)
 1. [Functions](#functions)
+1. [Boolean Trap](#boolean-trap)
 1. [Properties](#properties)
 1. [Variables](#variables)
 1. [Hoisting](#hoisting)
@@ -22,6 +23,7 @@
 1. [Constructors](#constructors)
 1. [Events](#events)
 1. [Modules](#modules)
+1. [UMD Conventions](#umd)
 1. [jQuery](#jquery)
 1. [ES5 Compatibility](#es5)
 1. [Testing](#testing)
@@ -328,6 +330,53 @@
     ```
 
 **[⬆ back to top](#TOC)**
+
+## <a name="boolean-trap">Boolean Trap</a>
+
+- Avoid using booleans as arguments
+
+    ```javascript
+    // bad
+    function setImage(useShard, useHomeDir, useJpgExt) {
+        var ext = '.' (useJpgExt ? 'jpg' : 'png');
+        var image = 'cheezburgr' + ext;
+        if (useHomeDir) {
+            image = 'home/' + image;
+        }
+        if (useShard) {
+            image = '//img-shard.domain.com/' + image;
+        }
+    }
+
+    // somewhere laterz in the codez
+
+    // what does each boolean  mean/do?!?
+    var thumbnail = setImage(true, false, true);
+
+    // good
+    function setImage(optionsa) {
+        options = options || {};
+        var ext = '.' + (options.ext || 'png');
+        var image = 'cheezburgr' + ext;
+        var useHomeDir = options.useHomeDir || false;
+        var useShard = options.useShard || false;
+        if (useHomeDir) {
+            image = 'home/' + image;
+        }
+        if (useShard) {
+            image = '//img-shard.domain.com/' + image;
+        }
+    }
+
+    // again, somewhere laterz
+    var thumbnail = setImage({ useShard: true, useHomeDir: false, ext: 'gif' });
+
+    ```
+
+- It may add some code bloat, but it makes it easier to instantly know what kind of settings are being passed in
+
+**[⬆ back to top](#TOC)**
+
 
 ## <a name='properties'>Properties</a>
 
@@ -645,6 +694,7 @@
 
 ## <a name='comments'>Comments</a>
 
+- Use [JSDoc](http://usejsdoc.org/) syntax for comments whenever possible
 - Use `/** ... */` for multiline comments. Include a description, specify types and values for all parameters and return values.
 
     ```javascript
@@ -1027,6 +1077,17 @@
         name: 'Bob Parr'
     });
     ```
+- Use capitals for abbreviations in the name
+
+    ```javascript
+    // bad
+    var isIe = !!window.attachEvent;
+    var useUsd = true;
+
+    // good
+    var isIE = !!window.attachEvent;
+    var useUSD = true;
+    ```
 
 - Use PascalCase when naming constructors or classes
 
@@ -1094,6 +1155,18 @@
         console.log(msg);
     };
     ```
+- "CONSTANTS" should be in all `UPPERCASE` with underscores (when applicable)
+
+    ```javascript
+    // bad
+    var startday = 10;
+    var start_hour_of_day = 20;
+
+    // good
+    var START_DAY = 10;
+    var START_HOUR_OF_DAY = 20;
+    ```
+
 
 **[⬆ back to top](#TOC)**
 
@@ -1181,24 +1254,6 @@
     };
     ```
 
-- The `prototype` object can also be aliased, typically to `fn`:
-
-    ```javascript
-    function Jedi() {
-        console.log('new Jedi');
-    }
-
-    Jedi.fn = Jedi.prototype;
-
-    Jedi.fn.fight = function fight () {
-        console.log('fighting');
-    };
-
-    Jedi.fn.block = function block () {
-        console.log('blocking');
-    };
-    ```
-
 - Methods can return `this` to help with method chaining.
 
     ```javascript
@@ -1233,8 +1288,42 @@
         .setHeight(20);
     ```
 
+- The `prototype` object can also be aliased, typically to `fn`:
 
-  - It's okay to write a custom toString() method, just make sure it works successfully and causes no side effects.
+    ```javascript
+    function Jedi() {
+        console.log('new Jedi');
+    }
+
+    Jedi.fn = Jedi.prototype;
+
+    Jedi.fn.fight = function fight () {
+        console.log('fighting');
+    };
+
+    Jedi.fn.block = function block () {
+        console.log('blocking');
+    };
+    ```
+
+- For private method objects, use `methods` as the variable name:
+
+    ```javascript
+    // bad
+    var fn = {
+        getMessage: function getMessage () {},
+        sendMessage: function sendMessage () {}
+    };
+
+    // good
+    var methods = {
+        getMessage: function getMessage () {},
+        sendMessage: function sendMessage () {}
+    };
+    ```
+
+
+- It's okay to write a custom toString() method, just make sure it works successfully and causes no side effects.
 
     ```javascript
     function Jedi(options) {
@@ -1287,10 +1376,41 @@
 
 ## <a name='modules'>Modules</a>
 
-- The module should start with a `!`. This ensures that if a malformed module forgets to include a final semicolon there aren't errors in production when the scripts get concatenated. [Explanation](https://github.com/airbnb/javascript/issues/44#issuecomment-13063933)
 - The file should be named with camelCase, live in a folder with the same name, and match the name of the single export.
-- Add a method called noConflict() that sets the exported module to the previous version and returns this one.
 - Always declare `'use strict';` at the top of the module.
+- [Browserify](http://browserify.org/) wraps up code for CommonJS consumption with `require`
+- No need to create closures for every file anymore
+- Only `require` the modules needed for the module
+
+    ```javascript
+    var $ = require('jquery');
+    var _ = require('underscore');
+    var Backbone = require('backbone') // or backbone-base-and-form-view if using `marinate`
+    ```
+- Export the public methods for other modules to use
+
+    ```javascript
+    module.exports = {
+        addEntry: function () { }
+    };
+
+    // or 
+    function Entry(options) {
+        this.entryId = options.id || null;
+    }; 
+
+    Entry.prototype.addEntry = function addEntry () { };
+
+    module.exports = Entry;
+
+    // file requiring Entry
+
+    var Entry = new (require('Entry')({ id: 10 }));
+    ```
+
+- [Avoiding circular dependencies](https://github.com/1stdibs/1stdibs-admin-v2/wiki/CommonJS-module-guidelines#avoid-circular-dependency-problems-pattern)
+
+- Add a method called noConflict() that sets the exported module to the previous version and returns this one.
 
     ```javascript
     // fancyInput/fancyInput.js
@@ -1311,6 +1431,35 @@
 
         global.FancyInput = FancyInput;
     }(this);
+    ```
+
+**[⬆ back to top](#TOC)**
+
+## <a name='umd'>UMD Conventions</a>
+
+- UMDing files allows for files to work in both CommonJS and standard JavaScript environments
+
+    ```javascript
+    (function (root, factory) {
+        'use strict';
+        var _exports;
+        if (typeof module !== 'undefined') {
+            // CommonJS
+            factory(module[, root, require(arguments), ... nth]);
+            _export = module.exports;
+        } else {
+            // browser globals
+            var _module = {};
+            factory(_module[, root, root.arguments, ... nth]);
+            _export = _module.exports;
+
+            root.dibs.createNamespace('dibs.some.namespace', _export);
+        }
+    }(window || global), function (module[, root, arguments, ... nth]) {
+        'use strict';
+        // regular codez
+    });
+
     ```
 
 **[⬆ back to top](#TOC)**
@@ -1387,13 +1536,16 @@
 
 ## <a name='testing'>Testing</a>
 
-  - **Yup.**
+- **Yup.**
 
     ```javascript
     function() {
         return true;
     }
     ```
+- [Jasmine BDD](http://jasmine.github.io/)
+- [Karma Test Runner](http://karma-runner.github.io/0.12/index.html)
+
 
 **[⬆ back to top](#TOC)**
 
@@ -1413,6 +1565,10 @@
 
 
 ## <a name='resources'>Resources</a>
+
+**Original JavaScript Style Guide**
+
+- [Airbnb JavaScript Style Guide](airbnb/javascript)
 
 
 **Read This**
