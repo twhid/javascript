@@ -354,7 +354,7 @@
     var thumbnail = setImage(true, false, true);
 
     // good
-    function setImage(optionsa) {
+    function setImage(options) {
         options = options || {};
         var ext = '.' + (options.ext || 'png');
         var image = 'cheezburgr' + ext;
