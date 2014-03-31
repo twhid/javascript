@@ -832,24 +832,32 @@
         breed: 'Bernese Mountain Dog'
     });
     ```
-- When creating [function expressions](#named-function-expression), place a space between either the `function` or the function name:
+- When creating an [anonymous function expressions](#named-function-expression), place a space between the `function` and the paranthesis:
 
     ```javascript
     // bad
     var anonymous = function() {
         return true;
     };
-    var named = function named() {
-        return true;
-    };
-
     // good
     var anonymous = function () {
         return true;
     }
+    ```
+- For [named function expressions](#named-function-expression), there is no need to add that leading space
+- TBH: This is mainly because PHPStorm is complaining at the moment :bowtie:
+
+    ```javascript
+    // bad   
     var named = function named () {
         return true;
     };
+
+    // good
+    var named = function named() {
+        return true;
+    };
+
     ```
 
 - Use indentation when making long method chains.
