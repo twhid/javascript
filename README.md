@@ -522,6 +522,30 @@
         return true;
     }
     ```
+- Assign a variable at declaration
+
+    ```javascript
+    // bad
+    var homer;
+    var bart;
+
+    homer = function () {
+        console.log('loves düff');
+    };
+
+    bart = function () {
+        console.log('uses a slingshot');
+    };
+
+    // good
+    var homer = function () {
+        console.log('loves düff');
+    };
+    var bart = function () {
+        console.log('uses a slingshot');
+    };
+
+    ```
 
 **[⬆ back to top](#TOC)**
 
